@@ -36,16 +36,16 @@ Masa.Extension_YEPItemSlots_Traits = Masa.Extension_YEPItemSlots_Traits || {};
  * 
  * To add "Element Rates" write "ER: " than the index 
  * of the element in the editor (starting with index 1)
- * followed by the percentage (+/- infront).
+ * followed by the percentage.
  *
- * e.g: Element 1 +80%
+ * e.g: Element 1 80%
  *   <Upgrade Effect>
- *    ER: 1 +80%
+ *    ER: 1 80%
  *   </Upgrade Effect>
  *
- * e.g: Element 3 -20%
+ * e.g: Element 3 120%
  *   <Upgrade Effect>
- *    ER: 3 -20%
+ *    ER: 3 120%
  *   </Upgrade Effect>
  *
  *
@@ -93,6 +93,9 @@ Masa.Extension_YEPItemSlots_Traits = Masa.Extension_YEPItemSlots_Traits || {};
  * Changelog
  * ============================================================================
  *
+ * Version 1.01:
+ * - Added Main Stat description to item (HP/MP/ATK/DEF/MATK/MDF/AGI/LUK)
+ *
  * Version 1.00:
  * - Finished plugin!
  * - Element Rates
@@ -110,31 +113,84 @@ ItemManager.processIUSEffect = function(line, mainItem, effectItem) {
     // AE: X
     if (line.match(/AE:[ ](\d+)/i)) {
       var value = parseInt(RegExp.$1);
-      mainItem.description += " (" + $dataSystem.elements[value] + ")";
       return this.addTraitToItem(mainItem, 31, value, 1);
     }
     // ER: X Y%
-    if (line.match(/ER:[ ](\d+)[ ]([\+\-]\d+)([%％])/i)) {
+    if (line.match(/ER:[ ](\d+)[ ](\d+)([%％])/i)) {
       var value1 = parseInt(RegExp.$1);
       var value2 = parseInt(RegExp.$2);
-      algSign = "";
-      if (value2 > 0){
-          algSign = "+";
-      }
-      mainItem.description += " (" + $dataSystem.elements[value1] + " " + algSign + value2 + "%)";
       return this.addTraitToItem(mainItem, 11, value1, value2/100);
     }
 };
 
-Masa.Extension_YEPItemSlots_Traits.ItemManager_effectIUSParamRateChange = ItemManager.effectIUSParamRateChange;
+//Masa.Extension_YEPItemSlots_Traits.ItemManager_effectIUSParamRateChange = ItemManager.effectIUSParamRateChange;
 ItemManager.effectIUSParamRateChange = function(item, stat, value) {
-    Masa.Extension_YEPItemSlots_Traits.ItemManager_effectIUSParamRateChange.call(this, item, stat, value);
+//Masa.Extension_YEPItemSlots_Traits.ItemManager_effectIUSParamRateChange.call(this, item, stat, value);
     algSign = "";
     if (value > 0){
         algSign = "+";
     }
     switch (stat) {
       //Ex-Parameters
+      case 'HP':
+      case 'MAXHP':
+      case 'MAX HP':
+        item.params[0] += value * 0.01 * baseItem.params[0];
+	item.description += " (HP " + algSign + value + ")";
+        break;
+      case 'MP':
+      case 'MAXMP':
+      case 'MAX MP':
+      case 'SP':
+      case 'MAXSP':
+      case 'MAX SP':
+        item.params[1] += value * 0.01 * baseItem.params[1];
+	item.description += " (SP " + algSign + value + ")";
+        break;
+      case 'ATK':
+      case 'STR':
+        item.params[2] += value * 0.01 * baseItem.params[2];
+	item.description += " (ATK " + algSign + value + ")";
+        break;
+      case 'DEF':
+        item.params[3] += value * 0.01 * baseItem.params[3];
+	item.description += " (DEF " + algSign + value + ")";
+        break;
+      case 'MAT':
+      case 'INT':
+      case 'SPI':
+        item.params[4] += value * 0.01 * baseItem.params[4];
+	item.description += " (MAT " + algSign + value + ")";
+        break;
+      case 'MDF':
+      case 'RES':
+        item.params[5] += value * 0.01 * baseItem.params[5];
+	item.description += " (MDF " + algSign + value + ")";
+        break;
+      case 'AGI':
+      case 'SPD':
+        item.params[6] += value * 0.01 * baseItem.params[6];
+	item.description += " (AGI " + algSign + value + ")";
+        break;
+      case 'LUK':
+        item.params[7] += value * 0.01 * baseItem.params[7];
+	item.description += " (LUK " + algSign + value + ")";
+        break;
+      case 'ALL':
+        for (var i = 0; i < 8; ++i) {
+          item.params[i] += value * 0.01 * baseItem.params[i];
+        }
+        break;
+      case 'CURRENT':
+        for (var i = 0; i < 8; ++i) {
+          if (item.params[i] === 0) continue;
+          item.params[i] += value * 0.01 * baseItem.params[i];
+        }
+        break;
+      case 'SLOT':
+      case 'SLOTS':
+        item.upgradeSlots += value * 0.01 * baseItem.upgradeSlots;
+        break;
       case 'HR':
         item.traits.push({code: 22, dataId: 0, value: value/100});
         item.description += " (Hit Rate " + algSign + value + "%)";	
